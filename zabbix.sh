@@ -1,12 +1,5 @@
-#!/bin/bash
-# Autor: Tiago Rogato
-# Site: https://trogato.wixsite.com/virtuasystem
-# Facebook: https://www.facebook.com/TROGATO
-# linkedin: https://www.linkedin.com/in/tiago-rogato-da-silveira-095563b6/
-# Data de criação: 25/07/2020
-# Data de atualização: 09/07/2025
 # Versão: 0.06
-# Testado e homologado para a versão do Debian GNU/Linux 12 (Bookworm) x64
+# Testado e homologado para a versão do Debian GNU/Linux 12 Bookworm x64
 # Kernel >= 6.1.x
 # Testado e homologado para a versão do Zabbix 7.0.x
 #
@@ -20,7 +13,7 @@
 #   Default language: English (en_US): Next step;
 # Check of pre-requisites: Next step;
 # Configure DB connection:
-#	Database type: MariaDB
+#	Database type: MySQL
 #	Database host: localhost
 #	Database port: 0 (use default port: 3306)
 #	Database name: zabbix
@@ -91,7 +84,7 @@ if [ "$USUARIO" == "0" ] && [ "$DEBIAN" == "12" ] && [ "$KERNEL" == "6.1" ]
 		echo -e "Kernel é >= 6.1, continuando com o script..."
 		sleep 5
 	else
-		echo -e "Usuário não é Root ($USUARIO) ou Distribuição não é Debian 12 ($DEBIAN) ou Kernel não é >=6.1 ($KERNEL)"
+		echo -e "Usuário nãoHXí não é Root ($USUARIO) ou Distribuição não é Debian 12 ($DEBIAN) ou Kernel não é >=6.1 ($KERNEL)"
 		echo -e "Caso você não tenha executado o script com o comando: sudo -i"
 		echo -e "Execute novamente o script para verificar o ambiente."
 		exit 1
@@ -101,7 +94,7 @@ fi
 # opção do dpkg: -s (status), opção do echo: -e (interpretador de escapes de barra invertida), -n (permite nova linha)
 # || (operador lógico OU), 2> (redirecionar de saída de erro STDERR), && = operador lógico AND
 echo -n "Verificando as dependências do Zabbix, aguarde... "
-	for name in mariadb-server mariadb-common apache2 php
+	for name in mysql-server mysql-common apache2 php
 	do
 		[[ $(dpkg -s $name 2> /dev/null) ]] || {
 			echo -en "\n\nO software: $name precisa ser instalado. \nUse o comando 'apt install $name'\n";
@@ -115,7 +108,7 @@ echo -n "Verificando as dependências do Zabbix, aguarde... "
 		}
 		sleep 5
 #
-# Script de instalação do Zabbix Server no Debian GNU/Linux 12
+# Script de instalação do Zabbix Server no Debian GNU/Linux 12 Bookworm
 # opção do comando echo: -e (enable interpretation of backslash escapes), \n (new line)
 # opção do comando hostname: -I (all IP address)
 # opção do comando date: + (format), %d (day), %m (month), %Y (year 1970), %H (hour 24), %M (minute 60)
@@ -123,9 +116,22 @@ echo -e "Início do script $0 em: $(date +%d/%m/%Y-"("%H:%M")")\n" &>> $LOG
 #
 clear
 echo
-echo -e "Instalação do Zabbix Server no Debian GNU/Linux 12\n"
+echo -e "Instalação do Zabbix Server no Debian GNU/Linux 12 Bookworm\n"
 echo -e "Após a instalação do Zabbix Server acesse a URL: http://$(hostname -I | cut -d' ' -f1)/zabbix/"
 echo -e "Aguarde, esse processo demora um pouco dependendo do seu Link de Internet...\n"
+sleep 5
+#
+echo -e "Adicionando o Repositório Main do Apt, aguarde..."
+	# opção do comando: &>> (redirecionar de saída padrão)
+	apt-add-repository main &>> $LOG
+echo -e "Repositório adicionado com sucesso!!!, continuando com o script...\n"
+sleep 5
+#
+echo -e "Adicionando o Repositório Contrib e Non-Free do Apt, aguarde..."
+	# opção do comando: &>> (redirecionar a saída padrão)
+	apt-add-repository contrib &>> $LOG
+	apt-add-repository non-free &>> $LOG
+echo -e "Repositórios adicionados com sucesso!!!, continuando com o script...\n"
 sleep 5
 #
 echo -e "Atualizando as listas do Apt, aguarde..."
@@ -177,14 +183,14 @@ sleep 5
 #
 echo -e "Criando o Banco de Dados e Populando as Tabelas do Zabbix Server, aguarde esse processo demora um pouco..."
 	# opção do comando: &>> (redirecionar de saída padrão)
-	# opção do comando mariadb: -u (user), -p (password), -e (execute)
+	# opção do comando mysql: -u (user), -p (password), -e (execute)
 	# opção do comando zcat: -v (verbose)
-	mariadb -u $USER -p$PASSWORD -e "$DATABASE" &>> $LOG
-	mariadb -u $USER -p$PASSWORD -e "$USERDATABASE" &>> $LOG
-	mariadb -u $USER -p$PASSWORD -e "$GRANTDATABASE" &>> $LOG
-	mariadb -u $USER -p$PASSWORD -e "$GRANTALL" &>> $LOG
-	mariadb -u $USER -p$PASSWORD -e "$FLUSH" &>> $LOG
-	zcat -v $CREATETABLE | mariadb -uzabbix -pzabbix zabbix &>> $LOG
+	mysql -u $USER -p$PASSWORD -e "$DATABASE" &>> $LOG
+	mysql -u $USER -p$PASSWORD -e "$USERDATABASE" &>> $LOG
+	mysql -u $USER -p$PASSWORD -e "$GRANTDATABASE" &>> $LOG
+	mysql -u $USER -p$PASSWORD -e "$GRANTALL" &>> $LOG
+	mysql -u $USER -p$PASSWORD -e "$FLUSH" &>> $LOG
+	zcat -v $CREATETABLE | mysql -uzabbix -pzabbix zabbix &>> $LOG
 echo -e "Banco de Dados criado com sucesso!!!, continuando com o script...\n"
 sleep 5
 #
@@ -193,7 +199,7 @@ echo -e "Editando o arquivo de configuração da Base de Dados do Zabbix Server,
 	# opção do comando cp: -v (verbose)
 	read
 	cp -v /etc/zabbix/zabbix_server.conf /etc/zabbix/zabbix_server.conf.bkp &>> $LOG
-	vim /etc/zabbix/zabbix_server.conf
+	nano /etc/zabbix/zabbix_server.conf
 echo -e "Arquivo editado com sucesso!!!, continuando com o script...\n"
 sleep 5
 #
@@ -202,7 +208,7 @@ echo -e "Editando o arquivo de configuração do PHP do Zabbix Server, pressione
 	# opção do comando cp: -v (verbose)
 	read
 	cp -v /etc/zabbix/apache.conf /etc/zabbix/apache.conf.bkp &>> $LOG
-	vim /etc/zabbix/apache.conf
+	nano /etc/zabbix/apache.conf
 echo -e "Arquivo editado com sucesso!!!, continuando com o script...\n"
 sleep 5
 #
@@ -211,7 +217,7 @@ echo -e "Editando o arquivo de configuração do Zabbix Agent, pressione <Enter>
 	# opção do comando cp: -v (verbose)
 	read
 	cp -v /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.bkp &>> $LOG
-	vim /etc/zabbix/zabbix_agentd.conf
+	nano /etc/zabbix/zabbix_agentd.conf
 echo -e "Arquivo editado com sucesso!!!, continuando com o script...\n"
 sleep 5
 #
