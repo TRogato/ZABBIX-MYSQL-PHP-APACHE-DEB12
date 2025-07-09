@@ -1,4 +1,10 @@
 #!/bin/bash
+# Autor: Tiago Rogato
+# Site: https://trogato.wixsite.com/virtuasystem
+# Facebook: https://www.facebook.com/TROGATO
+# linkedin: https://www.linkedin.com/in/tiago-rogato-da-silveira-095563b6/
+# Data de criação: 25/07/2020
+# Data de atualização: 09/07/2025
 # Versão: 0.06
 # Testado e homologado para a versão do Debian GNU/Linux 12 (Bookworm) x64
 # Kernel >= 6.1.x
