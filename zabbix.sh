@@ -100,17 +100,17 @@ fi
 # Verificando se as dependências do Zabbix estão instaladas
 # opção do dpkg: -s (status), opção do echo: -e (interpretador de escapes de barra invertida), -n (permite nova linha)
 # || (operador lógico OU), 2> (redirecionar de saída de erro STDERR), && = operador lógico AND
-echo -n "Verificando as dependências do Zabbic, aguarde... "
+echo -n "Verificando as dependências do Zabbix, aguarde... "
 	for name in mariadb-server mariadb-common apache2 php
 	do
 		[[ $(dpkg -s $name 2> /dev/null) ]] || {
 			echo -en "\n\nO software: $name precisa ser instalado. \nUse o comando 'apt install $name'\n";
 			deps=1;
 		}
-	[[ $deps -neconstexpr
+	done
 		[[ $deps -ne 1 ]] && echo "Dependências.: OK" || {
 			echo -en "\nInstale as dependências acima e execute novamente este script\n";
-			echo -en "Recomendo instalar um LAMP stack para resolver as dependências."
+			echo -en "Recomendo instalar o LAMP stack para resolver as dependências."
 			exit 1;
 		}
 		sleep 5
