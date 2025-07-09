@@ -1,11 +1,4 @@
 #!/bin/bash
-# Autor: Robson Vaamonde
-# Site: www.procedimentosemti.com.br
-# Facebook: facebook.com/ProcedimentosEmTI
-# Facebook: facebook.com/BoraParaPratica
-# YouTube: youtube.com/BoraParaPratica
-# Data de criação: 25/07/2020
-# Data de atualização: 09/07/2025
 # Versão: 0.06
 # Testado e homologado para a versão do Debian GNU/Linux 12 (Bookworm) x64
 # Kernel >= 6.1.x
@@ -101,17 +94,17 @@ fi
 # Verificando se as dependências do Zabbix estão instaladas
 # opção do dpkg: -s (status), opção do echo: -e (interpretador de escapes de barra invertida), -n (permite nova linha)
 # || (operador lógico OU), 2> (redirecionar de saída de erro STDERR), && = operador lógico AND
-echo -n "Verificando as dependências do Zabbix, aguarde... "
+echo -n "Verificando as dependências do Zabbic, aguarde... "
 	for name in mariadb-server mariadb-common apache2 php
 	do
 		[[ $(dpkg -s $name 2> /dev/null) ]] || {
 			echo -en "\n\nO software: $name precisa ser instalado. \nUse o comando 'apt install $name'\n";
 			deps=1;
 		}
-	done
+	[[ $deps -neconstexpr
 		[[ $deps -ne 1 ]] && echo "Dependências.: OK" || {
 			echo -en "\nInstale as dependências acima e execute novamente este script\n";
-			echo -en "Recomendo instalar o LAMP stack para resolver as dependências."
+			echo -en "Recomendo instalar um LAMP stack para resolver as dependências."
 			exit 1;
 		}
 		sleep 5
@@ -129,18 +122,7 @@ echo -e "Após a instalação do Zabbix Server acesse a URL: http://$(hostname -
 echo -e "Aguarde, esse processo demora um pouco dependendo do seu Link de Internet...\n"
 sleep 5
 #
-echo -e "Adicionando o Repositório do Zabbix Server, aguarde..."
-	# opção do comando: &>> (redirecionar de saída padrão)
-	# opção do comando wget: -O (output document file)
-	# opção do comando rm: -v (verbose)
-	# opção do comando dpkg: -i (install)
-	rm -v zabbix.deb &>> $LOG
-	wget $ZABBIX -O zabbix.deb &>> $LOG
-	dpkg -i zabbix.deb &>> $LOG
-echo -e "Repositório instalado com sucesso!!!, continuando com o script...\n"
-sleep 5
-#
-echo -e "Atualizando as listas do Apt com o novo Repositório do Zabbix Server, aguarde..."
+echo -e "Atualizando as listas do Apt, aguarde..."
 	# opção do comando: &>> (redirecionar a saída padrão)
 	apt update &>> $LOG
 echo -e "Listas atualizadas com sucesso!!!, continuando com o script...\n"
@@ -162,7 +144,24 @@ sleep 5
 #
 echo -e "Instalando o Zabbix Server, aguarde...\n"
 #
-echo -e "Instalando os pacotes do Zabbix Server, aguarde..."
+echo -e "Fazendo o download e instalando o Repositório do Zabbix Server, aguarde..."
+	# opção do comando: &>> (redirecionar de saída padrão)
+	# opção do comando wget: -O (output document file)
+	# opção do comando rm: -v (verbose)
+	# opção do comando dpkg: -i (install)
+	rm -v zabbix.deb &>> $LOG
+	wget $ZABBIX -O zabbix.deb &>> $LOG
+	dpkg -i zabbix.deb &>> $LOG
+echo -e "Repositório instalado com sucesso!!!, continuando com o script...\n"
+sleep 5
+#
+echo -e "Atualizando as listas do Apt com o novo Repositório do Zabbix Server, aguarde..."
+	# opção do comando: &>> (redirecionar a saída padrão)
+	apt update &>> $LOG
+echo -e "Listas atualizadas com sucesso!!!, continuando com o script...\n"
+sleep 5
+#
+echo -e "Instalando o Zabbix Server, aguarde..."
 	# opção do comando: &>> (redirecionar a saída padrão)
 	# opção do comando apt: -y (yes)
 	apt -y install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-agent \
