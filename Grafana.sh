@@ -8,9 +8,9 @@
 # Versão: 0.09
 # Testado e homologado para a versão do Debian GNU/Linux 12 Bookworm x64
 # Kernel >= 6.1.x
-# Testado e homologado para a versão do Grafana Server 11.2.x
+# Testado e homologado para a versão do Grafana Server 12.0.x
 #
-# Grafana é uma aplicação web de análise de código aberto multiplataforma e visualização
+# Grafana é a aplicação web de análise de código aberto multiplataforma e visualização
 # interativa da web. Ele fornece tabelas, gráficos e alertas para a Web quando conectado
 # a fontes de dados suportadas. É expansível através de um sistema de plug-in.
 #
@@ -24,10 +24,10 @@
 #
 # Informações que serão solicitadas na configuração via Web do Grafana
 # Email or username: admin
-# Password: admin: (Log In)
+# Password: admin (Log In)
 # Change Password
 #	New password: pti@2018
-#	Confirm new password: pti@2018: (Submit)
+#	Confirm new password: pti@2018 (Submit)
 #
 # Criando um Data Source do MySQL
 # Dashboard
@@ -95,6 +95,9 @@ FLUSH="FLUSH PRIVILEGES;"
 # Configuração da variável de Log utilizado nesse script
 LOG="/var/log/$(echo $0 | cut -d'/' -f2)"
 #
+# Definindo a variável HORAINICIAL para cálculo do tempo de execução
+HORAINICIAL=$(date +%T)
+#
 # Verificando se o usuário é Root e se a Distribuição é Debian 12
 # [ ] = teste de expressão, && = operador lógico AND, == comparação de string, exit 1 = A maioria
 # dos erros comuns na execução
@@ -150,15 +153,11 @@ echo -n "Verificando as dependências do Grafana Server, aguarde... "
 	for name in mariadb-server mysql-common apache2 php
 	do
 		[[ $(dpkg -s $name 2> /dev/null) ]] || {
-			echo -en "\n\nO software: $name precisa ser instalado. \nUse o comando 'apt install $name'\n";
-			deps=1;
+			echo -en "\n\nO software: $name precisa ser instalado. \nInstalando...\n";
+			apt -y install $name &>> $LOG
 		}
 	done
-		[[ $deps -ne 1 ]] && echo "Dependências.: OK" || {
-			echo -en "\nInstale as dependências acima e execute novamente este script\n";
-			echo -en "Recomendo instalar o LAMP stack para resolver as dependências.\n"
-			exit 1;
-		}
+	echo "Dependências.: OK"
 		sleep 5
 #
 # Verificando se o script já foi executado mais de 1 (uma) vez nesse servidor
@@ -245,14 +244,9 @@ echo -e "Instalando o Repositório do Grafana Server, aguarde..."
 	# opção do comando: &>> (redirecionar de saída padrão)
 	# opção do comando: | piper (conecta a saída padrão com a entrada padrão de outro comando)
 	# opção do comando wget: -q (quiet) -O (output document file)
-	# Adicionando a chave GPG do repositório Grafana
-	wget -q -O /tmp/grafana-apt-key.gpg https://apt.grafana.com/gpg.key &>> $LOG
-	# Importando a chave GPG para o sistema
-	apt-key add /tmp/grafana-apt-key.gpg &>> $LOG
-	# Adicionando o repositório Grafana OSS
-	echo "deb [signed-by=/tmp/grafana-apt-key.gpg] https://apt.grafana.com stable main" > /etc/apt/sources.list.d/grafana.list
-	# Removendo o arquivo de chave temporário
-	rm -f /tmp/grafana-apt-key.gpg &>> $LOG
+	sudo mkdir -p /etc/apt/keyrings/
+	wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+	echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
 echo -e "Repositório instalado com sucesso!!!, continuando com o script...\n"
 sleep 5
 #
@@ -275,17 +269,27 @@ echo -e "Atualizando os arquivos de configuração Grafana Server, aguarde..."
 	# opção do comando cp: -v (verbose)
 	# opção do comando chmod: -v (verbose), 640 (User: RW-, Group: R--, Other: ---)
 	# opção do comando chown: -v (verbose), :grafana (group)
-	mv -v /etc/grafana/grafana.ini /etc/grafana/grafana.ini.old &>> $LOG
-	cp -v conf/grafana/grafana.ini /etc/grafana/ &>> $LOG
-	chmod 640 -v /etc/grafana/grafana.ini &>> $LOG
-	chown :grafana /etc/grafana/grafana.ini &>> $LOG
+	if [ -f conf/grafana/grafana.ini ]; then
+		mv -v /etc/grafana/grafana.ini /etc/grafana/grafana.ini.old &>> $LOG
+		cp -v conf/grafana/grafana.ini /etc/grafana/ &>> $LOG
+		chmod -v 640 /etc/grafana/grafana.ini &>> $LOG
+		chown -v :grafana /etc/grafana/grafana.ini &>> $LOG
+	else
+		echo -e "Arquivo conf/grafana/grafana.ini não encontrado. Mantendo o arquivo de configuração padrão do Grafana."
+		echo -e "Arquivo conf/grafana/grafana.ini não encontrado. Mantendo o arquivo de configuração padrão do Grafana." &>> $LOG
+	fi
 echo -e "Arquivos atualizados com sucesso!!!, continuando com o script...\n"
 sleep 5
 #
 echo -e "Editando o arquivo de configuração grafana.ini, pressione <Enter> para continuar..."
 	# opção do comando read: -s (Do not echo keystrokes)
 	read -s
-	vim /etc/grafana/grafana.ini
+	if [ -f /etc/grafana/grafana.ini ]; then
+		vim /etc/grafana/grafana.ini
+	else
+		echo -e "Arquivo /etc/grafana/grafana.ini não encontrado. Pulando a edição."
+		echo -e "Arquivo /etc/grafana/grafana.ini não encontrado. Pulando a edição." &>> $LOG
+	fi
 echo -e "Arquivo editado com sucesso!!!, continuando com o script...\n"
 sleep 5
 #
